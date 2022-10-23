@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "mochidaz/simple-service/proto";
+
+package proto;
+
+message BrainfuckSourceRequest {
+	string source = 1;
+}
+
+message OutputResponse  {
+	string output = 1;
+}
+
+service BrainfuckService {
+	rpc Interpret (BrainfuckSourceRequest) returns (OutputResponse) {}
+	rpc InterpretStream (stream BrainfuckSourceRequest) returns (stream OutputResponse) {}
+}
