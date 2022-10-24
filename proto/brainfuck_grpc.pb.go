@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BrainfuckServiceClient interface {
 	Interpret(ctx context.Context, in *BrainfuckSourceRequest, opts ...grpc.CallOption) (*OutputResponse, error)
+	InterpretStream(ctx context.Context, opts ...grpc.CallOption) (BrainfuckService_InterpretStreamClient, error)
 }
 
 type brainfuckServiceClient struct {
@@ -42,11 +43,43 @@ func (c *brainfuckServiceClient) Interpret(ctx context.Context, in *BrainfuckSou
 	return out, nil
 }
 
+func (c *brainfuckServiceClient) InterpretStream(ctx context.Context, opts ...grpc.CallOption) (BrainfuckService_InterpretStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &BrainfuckService_ServiceDesc.Streams[0], "/proto.BrainfuckService/InterpretStream", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &brainfuckServiceInterpretStreamClient{stream}
+	return x, nil
+}
+
+type BrainfuckService_InterpretStreamClient interface {
+	Send(*BrainfuckSourceRequest) error
+	Recv() (*OutputResponse, error)
+	grpc.ClientStream
+}
+
+type brainfuckServiceInterpretStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *brainfuckServiceInterpretStreamClient) Send(m *BrainfuckSourceRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *brainfuckServiceInterpretStreamClient) Recv() (*OutputResponse, error) {
+	m := new(OutputResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // BrainfuckServiceServer is the server API for BrainfuckService service.
 // All implementations must embed UnimplementedBrainfuckServiceServer
 // for forward compatibility
 type BrainfuckServiceServer interface {
 	Interpret(context.Context, *BrainfuckSourceRequest) (*OutputResponse, error)
+	InterpretStream(BrainfuckService_InterpretStreamServer) error
 	mustEmbedUnimplementedBrainfuckServiceServer()
 }
 
@@ -56,6 +89,9 @@ type UnimplementedBrainfuckServiceServer struct {
 
 func (UnimplementedBrainfuckServiceServer) Interpret(context.Context, *BrainfuckSourceRequest) (*OutputResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Interpret not implemented")
+}
+func (UnimplementedBrainfuckServiceServer) InterpretStream(BrainfuckService_InterpretStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method InterpretStream not implemented")
 }
 func (UnimplementedBrainfuckServiceServer) mustEmbedUnimplementedBrainfuckServiceServer() {}
 
@@ -88,6 +124,32 @@ func _BrainfuckService_Interpret_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BrainfuckService_InterpretStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(BrainfuckServiceServer).InterpretStream(&brainfuckServiceInterpretStreamServer{stream})
+}
+
+type BrainfuckService_InterpretStreamServer interface {
+	Send(*OutputResponse) error
+	Recv() (*BrainfuckSourceRequest, error)
+	grpc.ServerStream
+}
+
+type brainfuckServiceInterpretStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *brainfuckServiceInterpretStreamServer) Send(m *OutputResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *brainfuckServiceInterpretStreamServer) Recv() (*BrainfuckSourceRequest, error) {
+	m := new(BrainfuckSourceRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // BrainfuckService_ServiceDesc is the grpc.ServiceDesc for BrainfuckService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -100,6 +162,13 @@ var BrainfuckService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _BrainfuckService_Interpret_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "InterpretStream",
+			Handler:       _BrainfuckService_InterpretStream_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "proto/brainfuck.proto",
 }
