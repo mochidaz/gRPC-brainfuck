@@ -5,14 +5,12 @@ import (
 	"log"
 	"net"
 
+	server "mochidaz/simple-service/grpc-server"
 	pb "mochidaz/simple-service/proto"
 )
 
-type Server struct {
-	pb.UnimplementedBrainfuckServiceServer
-}
-
 func main() {
+
 	conn, err := net.Listen("tcp", "0.0.0.0:50051")
 
 	log.Printf("Listening on %v\n", conn.Addr())
@@ -27,7 +25,7 @@ func main() {
 
 	s := grpc.NewServer()
 
-	pb.RegisterBrainfuckServiceServer(s, &Server{})
+	pb.RegisterBrainfuckServiceServer(s, &server.Server{})
 
 	log.Printf("Server started")
 	if err := s.Serve(conn); err != nil {

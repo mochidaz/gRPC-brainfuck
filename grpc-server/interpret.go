@@ -1,8 +1,7 @@
-package main
+package grpc_server
 
 import (
 	"context"
-	"fmt"
 	"log"
 	pb "mochidaz/simple-service/proto"
 	"mochidaz/simple-service/utils"
@@ -15,5 +14,5 @@ func (s *Server) Interpret(ctx context.Context, in *pb.BrainfuckSourceRequest) (
 		log.Fatalf("could not interpret: %v", err)
 		return nil, err
 	}
-	return &pb.OutputResponse{Output: fmt.Sprintf("Resp: %s", res)}, nil
+	return &pb.OutputResponse{Output: res}, nil
 }

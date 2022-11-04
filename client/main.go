@@ -18,7 +18,7 @@ func main() {
 	c := pb.NewBrainfuckServiceClient(conn)
 
 	// Uncomment for Unary Client
-	//sendSource(c)
+	// sendSource(c)
 
 	sendSourceStream(c)
 }
