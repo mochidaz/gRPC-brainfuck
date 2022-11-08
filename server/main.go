@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 
+	"google.golang.org/grpc/reflection"
 	server "mochidaz/simple-service/grpc-server"
 	pb "mochidaz/simple-service/proto"
 )
@@ -24,8 +25,9 @@ func main() {
 	log.Printf("Starting server")
 
 	s := grpc.NewServer()
-
 	pb.RegisterBrainfuckServiceServer(s, &server.Server{})
+
+	reflection.Register(s)
 
 	log.Printf("Server started")
 	if err := s.Serve(conn); err != nil {

@@ -6,9 +6,10 @@ generate:
 build:
 	go build -o bin/server server/main.go
 	go build -o bin/client client/main.go client/send_source.go client/send_source_stream.go
+	docker build --tag docker-grpc .
 
 test:
 	go test ./tests
 
 deploy:
-	cp bin/server /usr/local/bin/bf-server
+	docker run -d -p 8001:50051 docker-grpc
